@@ -13,6 +13,18 @@ services:
     depends_on:
       - mysql
 
+  app:
+    build:
+      context: ./infra/docker/php
+      dockerfile: Dockerfile
+    container_name: ktt-laravel-app
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - ktt-laravel-network
+    depends_on:
+      - mysql
+
   nginx:
     image: nginx:alpine
     container_name: ktt-laravel-nginx
