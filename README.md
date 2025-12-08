@@ -91,8 +91,15 @@ docker-compose exec php composer [コマンド]
 
 ## 開発環境
 
-- PHP: 8.2-FPM
+- PHP: 8.4-FPM
 - Nginx: Alpine
 - MySQL: 8.0
 - Laravel: 12.x
+
+## ポート設定
+
+- **Webサーバー**: http://localhost:8888
+- **MySQL**: localhost:3307
+
+**注意**: ポート80や3306が既に使用されている場合は、docker-compose.ymlでポート番号を変更してください。
 
