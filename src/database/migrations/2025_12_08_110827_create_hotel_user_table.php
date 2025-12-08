@@ -13,15 +13,19 @@ return new class extends Migration
     {
         Schema::create('hotel_user', function (Blueprint $table) {
             $table->id();
+            $table->foreign('hotel_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+            // 複合ユニークキー
+            $table->unique(['hotel_id','user_id']);
         });
     }
 
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('hotel_user');
     }
 };
+
