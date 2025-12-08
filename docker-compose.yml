@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  php:
+    build:
+      context: ./infra/docker/php
+      dockerfile: Dockerfile
+    container_name: ktt-laravel-php
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - ktt-laravel-network
+    depends_on:
+      - mysql
+
+  nginx:
+    image: nginx:alpine
+    container_name: ktt-laravel-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./infra/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - ktt-laravel-network
+    depends_on:
+      - php
+
+  mysql:
+    image: mysql:8.0
+    container_name: ktt-laravel-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ktt_laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./infra/docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    networks:
+      - ktt-laravel-network
+
+volumes:
+  mysql_data:
+
+networks:
+  ktt-laravel-network:
+    driver: bridge
+
