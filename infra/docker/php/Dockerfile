@@ -1,4 +1,4 @@
-FROM php:8.2-fpm
+FROM php:8.4-fpm
 
 # システムパッケージの更新と必要なツールのインストール
 RUN apt-get update && apt-get install -y \

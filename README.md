@@ -44,7 +44,9 @@ docker-compose exec php php artisan migrate
 ### 5. アプリケーションへのアクセス
 
 ブラウザで以下のURLにアクセス：
-- http://localhost
+- http://localhost:8888
+
+**注意**: ポート80が使用されている場合は、docker-compose.ymlでポート番号を変更してください。
 
 ## よく使うコマンド
 
