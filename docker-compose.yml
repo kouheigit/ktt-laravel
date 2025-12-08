@@ -17,7 +17,7 @@ services:
     image: nginx:alpine
     container_name: ktt-laravel-nginx
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./src:/var/www/html
       - ./infra/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
