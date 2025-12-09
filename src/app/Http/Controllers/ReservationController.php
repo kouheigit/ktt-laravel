@@ -72,6 +72,11 @@ class ReservationController extends Controller
         }
         abort(404);
     }
-    
 
+    // サービス選択画面
+    public function service(Request $request)
+   {
+       
+   }
 }
+
