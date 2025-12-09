@@ -9,11 +9,12 @@ class AlterUsersTable extends Migration
     public function up(){
         Schema::table('users', function (Blueprint $table) {
             // 会員ID
-            $table->string('member_id')->unique()->nullable->after('id');
+            $table->string('member_id')->nullable()->unique()->after('id');
 
             $table->string('last_name')->nullable();
             $table->string('first_name')->nullable();
             $table->string('last_kana')->nullable();
+            $table->string('first_kana')->nullable();
             $table->string('zip1',3)->nullable();
             $table->string('zip2',4)->nullable();
             $table->string('address1')->nullable();
@@ -43,7 +44,7 @@ class AlterUsersTable extends Migration
             $table->integer('type')->default(1)->comment('1:一般,2:オーナー');
             $table->integer('agree')->default(0)->comment('利用規約同意');
             $table->integer('status')->default(1)->comment('1:有効,0:無効');
-            $table->foreign('user_id')->nullable()->comment('親ユーザーID(オーナーの場合)');
+            $table->foreignId('parent_user_id')->nullable()->constrained('users')->onDelete('set null')->comment('親ユーザーID(オーナーの場合)');
 
             //論理削除
             $table->softDeletes();

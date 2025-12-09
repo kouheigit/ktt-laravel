@@ -11,22 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('hotel_user', function (Blueprint $table) {
+        Schema::create('user_points', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('hotel_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->integer('points')->default(0);
+            $table->integer('expired_points')->default(0);
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
-            // 複合ユニークキー
-            $table->unique(['hotel_id','user_id']);
         });
     }
 
     /**
      * Reverse the migrations.
      */
-    public function down()
+    public function down(): void
     {
-        Schema::dropIfExists('hotel_user');
+        Schema::dropIfExists('user_points');
     }
 };
-
