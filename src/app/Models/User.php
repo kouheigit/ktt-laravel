@@ -25,7 +25,22 @@ class User extends Authenticatable
         'company_tel','company_fax','send_name','send_kana','send_zip1','send_zip2',
         'send_address1','send_address2','send_tel','type','agree','status','user_id',
     ];
-
+    public function hotels()
+    {
+        return $this->belongsToMany(Holt::class);
+    }
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class);
+    }
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+    public function userPoints()
+    {
+        return $this->hasMany(User::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.
