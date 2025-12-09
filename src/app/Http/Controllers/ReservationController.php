@@ -16,5 +16,11 @@ use Carbon\Carbon;
 
 class ReservationController extends Controller
 {
-    //
+    private $freeday_service;
+
+    public function__construct(FreedayService $freeday_service)
+    {
+        $this->freeday_service = $freeday_service;
+    }
+    
 }
