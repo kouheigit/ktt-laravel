@@ -4,8 +4,9 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateHolidaysTable extends Migration
 {
+
     /**
      * Run the migrations.
      */
@@ -20,6 +21,9 @@ return new class extends Migration
             $table->integer('status')->default(1);
             $table->timestamps();
 
+            //複合インデックス
+            //user_id + end_date で検索 → 検索速度が最速になる
+            //Freeday::where('user_id',$id)->orderBy('end_date')->get();
             $table->index(['user_id','end_date']);
         });
     }
