@@ -76,7 +76,7 @@ class ReservationController extends Controller
     // サービス選択画面
     public function service(Request $request)
    {
-       
+
    }
 }
 
