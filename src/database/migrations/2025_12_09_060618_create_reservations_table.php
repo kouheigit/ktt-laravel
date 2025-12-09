@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateReservationsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
+            //外部キー
+            $table->foreignId('hotel_id')->constrained();
+            $table->foreignId('user_id')->constrained()->comment('予約者');
+            $table->foreignId('owner_id')->nullable()->constrained();
+            $table->foreignId('invitation_id')->nullable()->constrained();
+            
             $table->timestamps();
         });
     }
@@ -25,3 +31,5 @@ return new class extends Migration
         Schema::dropIfExists('reservations');
     }
 };
+
+
