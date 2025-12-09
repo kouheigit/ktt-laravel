@@ -37,9 +37,17 @@ class ReservationController extends Controller
         // FREEDAYSを取得
         $freedays = $this->freeday_service->getFreedays($user);
 
+        //予約を取得
+        $reservations = Reservation::where('owner_id',$user->id)
+            ->whereIn('status',[
+                ReservationConst::STATUS_APPLYING,
+                ReservationConst::STATUS_UNDER_RESERVATION,
+                ReservationConst::STATUS_RESERVED,
+                ])
+            ->orderBy('checkin_date','asc')
+            ->get();
+        return view('reservation.index',compact('calendars','freedays','reservations'));
     }
-
-
 
 
 }
