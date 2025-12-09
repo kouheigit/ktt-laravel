@@ -16,6 +16,18 @@ class FreedayService{
             ->where('status',1)
             ->orderBy('end_date','asc')
             ->get();
-        
+
     }
+
+    //今年度の最大フリーデイ泊数を取得
+    public function getYearMaxFreedaysNum(User $user)
+    {
+        $startOfYear = Carbon::now()->startOfYear();
+        $endOfYear = Carbon::now()->endOfYear();
+
+        return Freeday::where('user_id',$user->id)
+            ->whereBetween('start_date',[$startOfYear,$endOfYear])
+            ->sum('freedays');
+    }
+  
 }
