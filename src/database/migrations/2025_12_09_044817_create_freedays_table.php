@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateHolidaysTable extends Migration
 {
-
     /**
      * Run the migrations.
      */
@@ -22,7 +21,7 @@ class CreateHolidaysTable extends Migration
             $table->timestamps();
 
             //複合インデックス
-            //user_id + end_date で検索 → 検索速度が最速になる
+            //user_id + end_date で検索すると検索速度が最速になる
             //Freeday::where('user_id',$id)->orderBy('end_date')->get();
             $table->index(['user_id','end_date']);
         });
