@@ -22,5 +22,24 @@ class ReservationController extends Controller
     {
         $this->freeday_service = $freeday_service;
     }
-    
+
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+
+        $start_date = Carbon::now()->firstOfYear();
+        $end_date = $start_date->copy()->addYears(2)->endOfYear();
+
+        $calendars = Calendar::where('user_id',$user->id)->whereBetween('start_date',[$start_date,$end_date])
+            ->orderBy('start_date','asc')
+            ->get();
+
+        // FREEDAYSを取得
+        $freedays = $this->freeday_service->getFreedays($user);
+
+    }
+
+
+
+
 }
