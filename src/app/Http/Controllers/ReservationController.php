@@ -49,5 +49,29 @@ class ReservationController extends Controller
         return view('reservation.index',compact('calendars','freedays','reservations'));
     }
 
+    public function create(Request $request)
+    {
+        $calendar_id = $request->calendar_id;
+
+        $fr = $request->fr;//フリーデイID
+
+        //FIXDAYが予約失敗した時の処理
+        if($calendar_id){
+            //FIXDAY予約
+            $calendar_id = Calendar::findOrfail($calendar_id);
+
+            return view('reservation.create',compact('calendar'));
+        }
+
+        //FREEDAYの予約失敗した時の処理
+        if($fr){
+            //FREEDAY予約
+            $freeday = Freeday::findOrFail($fr);
+
+            return view('reservation.create_freeday',compact('freeday'));
+        }
+        abort(404);
+    }
+    
 
 }
