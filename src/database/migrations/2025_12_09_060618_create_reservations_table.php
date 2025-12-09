@@ -28,6 +28,14 @@ class CreateReservationsTable extends Migration
             $table->integer('day')->default(1)->comment('宿泊日数');
 
 
+            // ゲスト情報
+            $table->string('name')->nullable()->comment('代表者名');
+            $table->string('adult')->default(0)->comment('大人人数');
+            $table->integer('child')->default(0)->comment('子供人数');
+            $table->integer('dog')->default(0)->comment('犬頭数');
+            $table->text('note')->nullable()->comment('備考');
+
+
             $table->timestamps();
         });
     }
