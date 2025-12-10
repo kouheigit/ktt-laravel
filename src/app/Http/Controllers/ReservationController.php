@@ -262,6 +262,10 @@ class ReservationController extends Controller
             return redirect()->route('reservation.complete')
                 ->with('reservation_id',$reservation->id);
 
-            }
+            }catch(\Exception $e){
+            DB::rollBack();
+            \Log::error('Reservation Error: ' . $e->getMessage());
+            return back()->withErrors(['error' => '予約に失敗しました: ' . $e->getMessage()]);
+        }
     }
 }
