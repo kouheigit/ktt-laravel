@@ -71,4 +71,32 @@ class ReservationController extends Controller
         }
         abort(404);
     }
+
+    public function service(Request $request)
+    {
+        $user = Auth::user();
+
+        // セッションから予約情報取得
+        $reservation_data = session('reservation_data');
+
+        if (!$reservation_data) {
+            return redirect()->route('reservation.index');
+        }
+
+        // 事前予約可能なサービス取得
+        $services = Service::where('hotel_id', $reservation_data['hotel_id'])
+            ->where('status', 1)
+            ->where('tab', 1) // 事前予約タブ
+            ->orderBy('sort', 'asc')
+            ->with('serviceOptions')
+            ->get();
+
+        // 一時保存済みサービス取得
+        $tmp_orders = TmpOrderDetail::where('user_id',$user->id)
+            ->with(['service','serviceOption'])
+            ->get();
+
+        return view('reservation.service',compact('services','tmp_orders','reservation_data'));
+    }
+     
 }
