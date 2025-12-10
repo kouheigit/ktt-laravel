@@ -34,10 +34,23 @@ class FreedayService{
 
      public function canUseFreeday(Freeday $freeday, $days)
      {
+         //残り泊数チェック
          if($freeday->freedays < $days)
          {
              return false;
          }
+         //有効期限チェック
+         if(Carbon::parse($freeday->end_date)->isPast())
+         {
+             return false;
+         }
+         //利用開始日チェック
+         $availableFrom = Carbon::parse($freeday->start_date)->firstOfMonth()->subMonths(18);
+         if(Carbon::now()->isBefore($availableFrom)){
+             return false;
+         }
+         return true;
      }
-    
+
 }
+
