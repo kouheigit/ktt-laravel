@@ -184,4 +184,7 @@ class ReservationController extends Controller
             'total_price',
         ));
     }
+    public function store(Request $request){
+
+    }
 }
