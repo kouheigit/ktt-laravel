@@ -235,6 +235,19 @@ class ReservationController extends Controller
 
             }
 
+            // カレンダーステータス更新
+            if($reservation_data['calendar_id']){
+                Calendar::where('id',$reservation_data['calendar_id'])
+                    ->update(['status' => ReservationConst::STATUS_UNDER_RESERVATION]);
+            }
+            // フリーデイの場合は残数減少
+            if(isset($reservation_data['freeday_id'])){
+                $freeday = Freeday::findOrFail($reservation_data['freeday_id']);
+                $freeday->decrement('freedays',$reservation_data['days']);
+            }
+            // 一時データ削除
+            TmpOrderDetail::where('user_id',$user->id)->delete();
+            session()->forget('reservation_data');
             }
     }
 }
