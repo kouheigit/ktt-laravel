@@ -71,6 +71,6 @@ class FreedayService{
 
         return $freeday;
     }
-    
+
 }
 
