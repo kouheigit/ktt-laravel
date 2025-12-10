@@ -98,5 +98,18 @@ class ReservationController extends Controller
 
         return view('reservation.service',compact('services','tmp_orders','reservation_data'));
     }
-     
+
+    //カートに追加
+    public function cart_add(Request $request)
+    {
+        $validated = $request->validate([
+           'service_id'=>'required|exists:services,id',
+           'service_option_id'=>'nullable|exists:service_options,id',
+            'quantity'=>'required|integer|min:1',
+        ]);
+
+        $service = Service::findOrFail($request->service_id);
+    }
+   
+
 }
