@@ -51,6 +51,26 @@ class FreedayService{
          }
          return true;
      }
+    //フリーデイ消費
+     public function consumeFreeday(Freeday $freeday,$days)
+     {
+         if(!$this->canUseFreeday($freeday,$days))
+         {
+             throw new Exception('フリーデイが利用できません');
+         }
+         $freeday->decrement('freedays',$days);
 
+         return $freeday;
+     }
+
+
+    //フリーデイ返却（キャンセル時）
+    public function returnFreeday(Freeday $freeday, $days)
+    {
+        $freeday->increment('freedays',$days);
+
+        return $freeday;
+    }
+    
 }
 
