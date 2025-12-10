@@ -29,5 +29,15 @@ class FreedayService{
             ->whereBetween('start_date',[$startOfYear,$endOfYear])
             ->sum('freedays');
     }
-  
+
+    //フリーデイ利用可能チェック
+
+     public function canUseFreeday(Freeday $freeday, $days)
+     {
+         if($freeday->freedays < $days)
+         {
+             return false;
+         }
+     }
+    
 }
