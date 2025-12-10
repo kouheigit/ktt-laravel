@@ -185,6 +185,17 @@ class ReservationController extends Controller
         ));
     }
     public function store(Request $request){
+        DB::beginTranscation();
+        try{
+            $user = Auth::user();
+            $reservation_data = session('reservation_data');
+
+            if(!$reservation_data){
+                throw new \Exception('予約情報がありません');
+            }
+        }
 
     }
+   
+
 }
