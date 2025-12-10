@@ -248,6 +248,20 @@ class ReservationController extends Controller
             // 一時データ削除
             TmpOrderDetail::where('user_id',$user->id)->delete();
             session()->forget('reservation_data');
+
+            // 予約ログ保存
+            ReservationLog::create([
+               'reservation_id'=>$reservation->id,
+               'user_id'=>$user->id,
+               'action'=>'create',
+               'data'=>json_encode($reservation),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('reservation.complete')
+                ->with('reservation_id',$reservation->id);
+
             }
     }
 }
