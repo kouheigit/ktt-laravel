@@ -116,11 +116,24 @@ class ReservationController extends Controller
         }
         // 価格計算
         $price = $service->price;
+
         if($request->service_option_id){
             $option = ServiceOption::findOrFail($request->service_option_id);
             $price += $option->price;
         }
+
+        // 一時保存
+        TmpOrderDetail::create([
+            'user_id' => Auth::id(),
+            'service_id' => $service->id,
+            'service_option_id' => $request->service_option_id,
+            'price'=> $price,
+            'quantity'=> $request->quantity,
+            'total_price'=> $price * $request->quantity,
+            'type'=> 1,
+            ]);
+
+        return redirect()->route('reservation.cart');
     }
 
- 
 }
