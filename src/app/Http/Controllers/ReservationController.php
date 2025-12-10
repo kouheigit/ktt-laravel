@@ -109,7 +109,18 @@ class ReservationController extends Controller
         ]);
 
         $service = Service::findOrFail($request->service_id);
-    }
-   
 
+        //在庫チェック
+        if($service->stock > 0 && $service->stock < $request->quantity) {
+            return back()->withErrors(['quantity'=>'在庫が不足してます']);
+        }
+        // 価格計算
+        $price = $service->price;
+        if($request->service_option_id){
+            $option = ServiceOption::findOrFail($request->service_option_id);
+            $price += $option->price;
+        }
+    }
+
+ 
 }
