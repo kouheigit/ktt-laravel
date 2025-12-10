@@ -210,13 +210,12 @@ class ReservationController extends Controller
                 'payment' => $request->payment ?? 0,
                 'status' => ReservationConst::STATUS_UNDER_RESERVATION,
             ]);
-        }
-        // サービス注文作成
+            // サービス注文作成
             $tmp_orders = TmpOrderDetail::where('user_id',$user->id)->get();
             foreach($tmp_orders as $tmp){
                 $order = Order::create([
-                   'user_id'=>$user->id,
-                   'reservation_id'=>$reservation->id,
+                    'user_id'=>$user->id,
+                    'reservation_id'=>$reservation->id,
                     'service_id'=>$tmp->service_id,
                     'price'=>$tmp->price,
                     'quantity'=>$tmp->quantity,
@@ -225,7 +224,17 @@ class ReservationController extends Controller
                     'type'=>1,
                     'status'=>1
                 ]);
+                OrderDetail::create([
+                    'order_id'=>$order->id,
+                    'service_id'=>$tmp->service_id,
+                    'service_option_id'=>$tmp->service_option_id,
+                    'price'=>$tmp->price,
+                    'quantity'=> $tmp->quantity,
+                    'total_price' => $tmp->total_price,
+                ]);
+
+            }
+
             }
     }
-
 }
