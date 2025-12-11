@@ -284,6 +284,31 @@ class ReservationController extends Controller
     //キャンセル
     public function cancel(Reservation $reservation)
     {
+        if($reservation->user_id = Auth::id()){
+            abort(403);
+        }
 
+        DB::transaction(function () use ($reservation) {
+            //ステータス更新
+            $reservation->update(['status' => ReservationConst::STATUS_CANCEL]);
+
+            //カレンダー解散
+            if ($reservation->calendar_id) {
+                Calendar::where('id', $reservation->calendar_id)
+                    ->update(['status' => 1]);
+            }
+            // フリーデイの場合は泊数を戻す
+            // （ビジネスルールに応じて実装）
+
+            // ログ保存
+            ReservationLog::create([
+                'reservation_id' => $reservation->id,
+                'user_id' => Auth::id(),
+                'action' => 'cancel',
+                'data' => json_encode(['canceled_at' => now()]),
+            ]);
+        });
+        return redirect()->route('mypage.index')
+            ->with('success','予約をキャンセルしました');
     }
 }
