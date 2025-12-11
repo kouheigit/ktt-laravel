@@ -15,6 +15,22 @@ class CalendarController extends Controller
 {
     public function index(Request $request)
     {
-        
+        $user = Auth::user();
+        //年月指定(デフォルトは今月)
+        $year = $request->input('year',now()->year);
+        $month = $request->input('month',now()->month);
+
+        $date = Carbon::createFaromDate($year,$month,1);
+
+        //該当月のカレンダー取得
+        $calendars = Calendar::where('user_id',$user->id)
+            ->whereYear('start_date',$year)
+            ->whereMonth('state',$month)
+            ->with(['hotel'])
+            ->orderBy('start_date','asc')
+            ->get();
+
+
+      
     }
 }
