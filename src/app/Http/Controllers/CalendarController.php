@@ -52,7 +52,16 @@ class CalendarController extends Controller
 
         // 前月・次月
         $prevMonth = $date->copy()->subMonth();
-        $nexMonth = $date->copy()->addMonth();
+        $nextMonth = $date->copy()->addMonth();
 
+        return view('calendar.index',compact(
+           'calendars',
+           'holidays',
+           'reservations',
+           'year',
+           'month',
+           'prevMonth',
+           'nextMonth',
+        ));
     }
 }
