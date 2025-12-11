@@ -2,17 +2,35 @@
 // app/Http/Controllers/ReservationController.php
 
 namespace App\Http\Controllers;
+
 use App\Models\Reservation;
+
 use App\Models\Calendar;
+
 use App\Models\Service;
+
 use App\Models\TmpOrderDetail;
+
 use App\Models\Order;
+
 use App\Models\OrderDetail;
+
+use App\Models\Freeday;
+
+use App\Models\ServiceOption;
+
+use App\Models\ReservationLog;
+
 use App\Consts\ReservationConst;
+
 use App\Services\FreedayService;
+
 use Illuminate\Http\Request;
+
 use Auth;
+
 use DB;
+
 use Carbon\Carbon;
 
 class ReservationController extends Controller
@@ -23,55 +41,67 @@ class ReservationController extends Controller
     {
         $this->freeday_service = $freeday_service;
     }
+
+    /**
+     * 予約一覧表示
+     */
     public function index(Request $request)
     {
         $user = Auth::user();
 
-        //2年分のFIXDAYを取得
+        // 2年分のFIXDAYを取得
         $start_date = Carbon::now()->firstOfYear();
-        $end_date = $start_date->copy()->addYear(2)->endOfyear();
+        $end_date = $start_date->copy()->addYears(2)->endOfYear();
 
-        $calendars = Calendar::where('user_id',$user->id)
-            ->whereBetween('start_date',[$start_date,$end_date])
-            ->orderBy('start_date',[$start_date,$end_date])
+        $calendars = Calendar::where('user_id', $user->id)
+            ->whereBetween('start_date', [$start_date, $end_date])
+            ->orderBy('start_date', 'asc')
             ->get();
 
-        //FREEDAYSを取得
+        // FREEDAYSを取得
         $freedays = $this->freeday_service->getFreedays($user);
 
         // 予約を取得
-        $reservations = Reservation::where('owner_id',$user->id)
-            ->whereIn('status',[
+        $reservations = Reservation::where('owner_id', $user->id)
+            ->whereIn('status', [
                 ReservationConst::STATUS_APPLYING,
                 ReservationConst::STATUS_UNDER_RESERVATION,
                 ReservationConst::STATUS_RESERVED
             ])
-            ->orderBy('checkin_date','asc')
+            ->orderBy('checkin_date', 'asc')
             ->get();
-        return view('reservation.index',compact('calendars','freedays','reservations'));
+
+        return view('reservation.index', compact('calendars', 'freedays', 'reservations'));
     }
 
-    //予約作成画面
-
+    /**
+     * 予約作成画面
+     */
     public function create(Request $request)
     {
         $calendar_id = $request->calendar_id;
-        $fr = $request->fr; //フリーディID
+        $fr = $request->fr; // フリーデイID
 
-        //カレンダーの予約生成が失敗した時
-        if($calendar_id) {
-            //FIXDAY予約
+        if ($calendar_id) {
+            // FIXDAY予約
             $calendar = Calendar::findOrFail($calendar_id);
-            return view('reservation.create',compact('calendar'));
+
+            return view('reservation.create', compact('calendar'));
         }
-        //フリーディの予約生成が失敗した時
-        if($fr){
-            $freeday = Freeday::findOrfail($fr);
-            return view('reservation.create',compact('freeday'));
+
+        if ($fr) {
+            // FREEDAY予約
+            $freeday = Freeday::findOrFail($fr);
+
+            return view('reservation.create_freeday', compact('freeday'));
         }
+
         abort(404);
     }
 
+    /**
+     * サービス選択画面
+     */
     public function service(Request $request)
     {
         $user = Auth::user();
@@ -92,32 +122,34 @@ class ReservationController extends Controller
             ->get();
 
         // 一時保存済みサービス取得
-        $tmp_orders = TmpOrderDetail::where('user_id',$user->id)
-            ->with(['service','serviceOption'])
+        $tmp_orders = TmpOrderDetail::where('user_id', $user->id)
+            ->with(['service', 'serviceOption'])
             ->get();
 
-        return view('reservation.service',compact('services','tmp_orders','reservation_data'));
+        return view('reservation.service', compact('services', 'tmp_orders', 'reservation_data'));
     }
 
-    //カートに追加
+    /**
+     * カートに追加
+     */
     public function cart_add(Request $request)
     {
         $validated = $request->validate([
-           'service_id'=>'required|exists:services,id',
-           'service_option_id'=>'nullable|exists:service_options,id',
-            'quantity'=>'required|integer|min:1',
+            'service_id' => 'required|exists:services,id',
+            'service_option_id' => 'nullable|exists:service_options,id',
+            'quantity' => 'required|integer|min:1',
         ]);
 
         $service = Service::findOrFail($request->service_id);
 
-        //在庫チェック
-        if($service->stock > 0 && $service->stock < $request->quantity) {
-            return back()->withErrors(['quantity'=>'在庫が不足してます']);
+        // 在庫チェック
+        if ($service->stock > 0 && $service->stock < $request->quantity) {
+            return back()->withErrors(['quantity' => '在庫が不足しています']);
         }
+
         // 価格計算
         $price = $service->price;
-
-        if($request->service_option_id){
+        if ($request->service_option_id) {
             $option = ServiceOption::findOrFail($request->service_option_id);
             $price += $option->price;
         }
@@ -127,66 +159,80 @@ class ReservationController extends Controller
             'user_id' => Auth::id(),
             'service_id' => $service->id,
             'service_option_id' => $request->service_option_id,
-            'price'=> $price,
-            'quantity'=> $request->quantity,
-            'total_price'=> $price * $request->quantity,
-            'type'=> 1,
-            ]);
+            'price' => $price,
+            'quantity' => $request->quantity,
+            'total_price' => $price * $request->quantity,
+            'type' => 1,
+        ]);
 
         return redirect()->route('reservation.cart');
     }
 
-
-    //カート画面
+    /**
+     * カート画面
+     */
     public function cart(Request $request)
     {
         $user = Auth::user();
         $reservation_data = session('reservation_data');
 
-        $tmp_orders = TmpOrderDetail::where('user_id',$user->id)
-            ->with(['service','serviceOption'])
+        $tmp_orders = TmpOrderDetail::where('user_id', $user->id)
+            ->with(['service', 'serviceOption'])
             ->get();
 
-        $total_price  = $tmp_orders->sum('total_price');
+        $total_price = $tmp_orders->sum('total_price');
 
-        return view('reservation.cart',compact('tmp_orders','total_price','reservation_data'));
+        return view('reservation.cart', compact('tmp_orders', 'total_price', 'reservation_data'));
     }
-    //カート削除
-    public function cart_delete(TempOrderDetail $tmp_order_detail)
+
+    /**
+     * カート削除
+     */
+    public function cart_delete(TmpOrderDetail $tmp_order_detail)
     {
-        if($tmp_order_detail->user_id != Auth::id()){
+        if ($tmp_order_detail->user_id != Auth::id()) {
             abort(403);
         }
+
         $tmp_order_detail->delete();
+
         return redirect()->route('reservation.cart');
     }
-    //予約確認画面
+
+    /**
+     * 予約確認画面
+     */
     public function confirm(Request $request)
     {
         $user = Auth::user();
         $reservation_data = session('reservation_data');
 
-        if(!$reservation_data){
+        if (!$reservation_data) {
             return redirect()->route('reservation.index');
         }
 
-        $tmp_orders = TmpOrderDetail::where('user_id',$user->id)
-            ->with(['service','serviceOption'])
+        $tmp_orders = TmpOrderDetail::where('user_id', $user->id)
+            ->with(['service', 'serviceOption'])
             ->get();
 
         $service_total = $tmp_orders->sum('total_price');
         $total_price = $service_total;
 
-        return view('reservation.confirm',compact(
-           'reservation_data',
-           'tmp_orders',
-           'service_total',
-            'total_price',
+        return view('reservation.confirm', compact(
+            'reservation_data',
+            'tmp_orders',
+            'service_total',
+            'total_price'
         ));
     }
+
+    /**
+     * 予約登録（決済なし版）
+     */
     public function store(Request $request)
     {
-        DB::beginTranscation();
+        DB::beginTransaction();
+
         try {
             $user = Auth::user();
             $reservation_data = session('reservation_data');
@@ -195,7 +241,7 @@ class ReservationController extends Controller
                 throw new \Exception('予約情報がありません');
             }
 
-            //予約作成
+            // 予約作成
             $reservation = Reservation::create([
                 'hotel_id' => $reservation_data['hotel_id'],
                 'user_id' => $user->id,
@@ -211,8 +257,10 @@ class ReservationController extends Controller
                 'payment' => $request->payment ?? 0,
                 'status' => ReservationConst::STATUS_UNDER_RESERVATION,
             ]);
+
             // サービス注文作成
             $tmp_orders = TmpOrderDetail::where('user_id', $user->id)->get();
+
             foreach ($tmp_orders as $tmp) {
                 $order = Order::create([
                     'user_id' => $user->id,
@@ -223,8 +271,9 @@ class ReservationController extends Controller
                     'total_price' => $tmp->total_price,
                     'payment' => $request->payment ?? 0,
                     'type' => 1,
-                    'status' => 1
+                    'status' => 1,
                 ]);
+
                 OrderDetail::create([
                     'order_id' => $order->id,
                     'service_id' => $tmp->service_id,
@@ -233,7 +282,6 @@ class ReservationController extends Controller
                     'quantity' => $tmp->quantity,
                     'total_price' => $tmp->total_price,
                 ]);
-
             }
 
             // カレンダーステータス更新
@@ -241,11 +289,13 @@ class ReservationController extends Controller
                 Calendar::where('id', $reservation_data['calendar_id'])
                     ->update(['status' => ReservationConst::STATUS_UNDER_RESERVATION]);
             }
+
             // フリーデイの場合は残数減少
             if (isset($reservation_data['freeday_id'])) {
                 $freeday = Freeday::findOrFail($reservation_data['freeday_id']);
                 $freeday->decrement('freedays', $reservation_data['days']);
             }
+
             // 一時データ削除
             TmpOrderDetail::where('user_id', $user->id)->delete();
             session()->forget('reservation_data');
@@ -255,7 +305,7 @@ class ReservationController extends Controller
                 'reservation_id' => $reservation->id,
                 'user_id' => $user->id,
                 'action' => 'create',
-                'data' => json_encode($reservation),
+                'data' => json_encode($reservation_data),
             ]);
 
             DB::commit();
@@ -269,34 +319,40 @@ class ReservationController extends Controller
             return back()->withErrors(['error' => '予約に失敗しました: ' . $e->getMessage()]);
         }
     }
-    //予約詳細表示
+
+    /**
+     * 予約詳細表示
+     */
     public function show(Reservation $reservation)
     {
-        if($reservation->user_id != Auth::id() && $reservation->owner_id != Auth::id()){
+        if ($reservation->user_id != Auth::id() && $reservation->owner_id != Auth::id()) {
             abort(403);
         }
 
-        $reservation->load(['hotel','orders.orderDetails.service','addOrders']);
+        $reservation->load(['hotel', 'orders.orderDetails.service', 'addOrders']);
 
-        return view('reservation.show',compact('reservation'));
+        return view('reservation.show', compact('reservation'));
     }
 
-    //キャンセル
+    /**
+     * 予約キャンセル
+     */
     public function cancel(Reservation $reservation)
     {
-        if($reservation->user_id = Auth::id()){
+        if ($reservation->user_id != Auth::id()) {
             abort(403);
         }
 
         DB::transaction(function () use ($reservation) {
-            //ステータス更新
+            // ステータス更新
             $reservation->update(['status' => ReservationConst::STATUS_CANCEL]);
 
-            //カレンダー解散
+            // カレンダー解放
             if ($reservation->calendar_id) {
                 Calendar::where('id', $reservation->calendar_id)
                     ->update(['status' => 1]);
             }
+
             // フリーデイの場合は泊数を戻す
             // （ビジネスルールに応じて実装）
 
@@ -308,7 +364,8 @@ class ReservationController extends Controller
                 'data' => json_encode(['canceled_at' => now()]),
             ]);
         });
+
         return redirect()->route('mypage.index')
-            ->with('success','予約をキャンセルしました');
+            ->with('success', '予約をキャンセルしました');
     }
 }
