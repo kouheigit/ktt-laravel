@@ -37,7 +37,22 @@ class CalendarController extends Controller
             ->map(function($date){
               return Carbon::parse($date)->format('Y-m-d');
             })->toArray();
-    
+
+        //予約済み日程
+        $reservations = Reservation::where('user_id', $user->id)
+            ->where(function($query) use ($date) {
+                $query->whereYear('checkin_date', $date->year)
+                    ->whereMonth('checkin_date', $date->month);
+            })
+            ->orWhere(function($query) use ($date) {
+                $query->whereYear('checkout_date', $date->year)
+                    ->whereMonth('checkout_date', $date->month);
+            })
+            ->get();
+
+        // 前月・次月
+        $prevMonth = $date->copy()->subMonth();
+        $nexMonth = $date->copy()->addMonth();
 
     }
 }
