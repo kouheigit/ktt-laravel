@@ -273,16 +273,5 @@ class ReservationController extends Controller
     public function show(Reservation $reservation)
     {
     }
-    /*
-     *  public function show(Reservation $reservation)
-    {
-        if ($reservation->user_id != Auth::id() && $reservation->owner_id != Auth::id()) {
-            abort(403);
-        }
 
-        $reservation->load(['hotel', 'orders.orderDetails.service', 'addOrders']);
-
-        return view('reservation.show', compact('reservation'));
-    }
-     */
 }
