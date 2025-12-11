@@ -280,4 +280,10 @@ class ReservationController extends Controller
 
         return view('reservation.show',compact('reservation'));
     }
+
+    //キャンセル
+    public function cancel(Reservation $reservation)
+    {
+
+    }
 }
