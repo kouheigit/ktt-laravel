@@ -30,7 +30,14 @@ class CalendarController extends Controller
             ->orderBy('start_date','asc')
             ->get();
 
+        //休日取得
+        $holidays = Holiday::whereYear('date',$year)
+            ->whereMonth('date',$month)
+            ->pluck('date')
+            ->map(function($date){
+              return Carbon::parse($date)->format('Y-m-d');
+            })->toArray();
+    
 
-      
     }
 }
