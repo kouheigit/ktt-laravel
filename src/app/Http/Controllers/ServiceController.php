@@ -54,9 +54,14 @@ class ServiceController extends Controller
         }
     }
 
+    //カート追加
     public function store(Request $request)
     {
-        
+        $validated = $request->validate([
+            'service_id'=>'required|existes:services,id',
+            'service_option_id'=>'nullable|existes:services_options,id',
+            'quantity'=>'required|integer|min:1',
+            'reservation_id'=>'nullable|exists:reservations,id',
+        ]);
     }
-
 }
