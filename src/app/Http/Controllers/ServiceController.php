@@ -63,5 +63,31 @@ class ServiceController extends Controller
             'quantity'=>'required|integer|min:1',
             'reservation_id'=>'nullable|exists:reservations,id',
         ]);
+
+        $service = Service::findOrFail($request->request_id);
+        $user = Auth::user();
+
+        //最小注文数チェック
+        if($request->quantity < $service->minumum) {
+            return back()->withErrors([
+                'quantity' => "最小注文数は{$service->minimum}{$service->unit}です"
+            ]);
+        }
+            // 在庫チェック
+            if ($service->stock > 0 && $service->stock < $request->quantity) {
+                return back()->withErrors(['quantity' => '在庫が不足しています']);
+            }
+
+
+        //価格計算
+        $price = $service->price;
+        if($request->service_option_id){
+            $option = ServiceOption::findOrFail($request->service_option_id);
+            $price += $option->price;
+        }
+        // カート取得または作成
+       $cart = Cart::firstOrCreate(['user_id'=>$user->id]);
+
+
     }
 }
