@@ -66,6 +66,24 @@ class CalendarController extends Controller
     }
     //日付詳細
     public function detail($year, $month, $day){
+        $user = Auth::user();
+        $date = Carbon::createFromDate($year, $month, $day);
 
+        // その日のカレンダー情報取得
+        $calendar = Calendar::where('user_id', $user->id)
+            ->where('date', $date->format('Y-m-d'))
+            ->orWhere(function($query) use ($date) {
+                $query->where('start_date', '<=', $date->format('Y-m-d'))
+                    ->where('end_date', '>=', $date->format('Y-m-d'));
+            })
+            ->first();
+
+        // その日の予約
+        $reservation = Reservation::where('user_id', $user->id)
+            ->where('checkin_date', '<=', $date->format('Y-m-d'))
+            ->where('checkout_date', '>=', $date->format('Y-m-d'))
+            ->first();
+
+        return view('calendar.detail', compact('calendar', 'reservation', 'date'));
     }
 }
