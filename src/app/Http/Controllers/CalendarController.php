@@ -64,4 +64,8 @@ class CalendarController extends Controller
            'nextMonth',
         ));
     }
+    //日付詳細
+    public function detail($year, $month, $day){
+
+    }
 }
