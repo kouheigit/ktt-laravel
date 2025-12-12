@@ -17,6 +17,15 @@ class ServiceController extends Controller
 {
     public function index()
     {
-        
+        $services = Service::where('status',1)
+            ->where('tab',2) //現地注文タブ
+            ->orderBy('sort','asc')
+            ->with('serviceOptions')
+            ->get();
+
+        //最新の予約取得
+        $last_reservation = Reservation::getLastReservation();
+
+        return view('services.index',compact('services','last_reservation'));
     }
 }
