@@ -52,8 +52,11 @@ class ServiceController extends Controller
             return view('services.show',compact('service','reservation'));
 
         }
+    }
 
-
+    public function store(Request $request)
+    {
+        
     }
 
 }
