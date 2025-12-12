@@ -28,4 +28,8 @@ class ServiceController extends Controller
 
         return view('services.index',compact('services','last_reservation'));
     }
+
+    public function show(Service $service,Request $request){
+
+    }
 }
