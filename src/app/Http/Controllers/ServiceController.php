@@ -85,9 +85,21 @@ class ServiceController extends Controller
             $option = ServiceOption::findOrFail($request->service_option_id);
             $price += $option->price;
         }
-        // カート取得または作成
-       $cart = Cart::firstOrCreate(['user_id'=>$user->id]);
 
+        // カート取得または作成
+        $cart = Cart::firstOrCreate(['user_id' => $user->id]);
+
+        CartDetail::create([
+            'cart_id' => $cart->id,
+            'service_id' => $service->id,
+            'service_option_id' => $request->service_option_id,
+            'price' => $price,
+            'quantity' => $request->quantity,
+            'total_price' => $price * $request->quantity,
+        ]);
+
+        return redirect()->route('cart.index')
+            ->with('success', 'カートに追加しました');
 
     }
 }
