@@ -36,4 +36,11 @@ class CartController extends Controller
 
         return view('cart.index',compact('cart','total_price','last_reservation'));
     }
+    //カート明細削除
+    public function delete(CartDetail $cart_detail)
+    {
+        
+    }
+
+
 }
