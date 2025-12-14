@@ -52,7 +52,19 @@ class CartController extends Controller
     //確認画面
     public function confirm(Cart $cart)
     {
+        if($cart->user_id != Auth::id()){
+            abort(403);
+        }
+        $cart->load([
+           'cartDetails.service',
+           'cartDetails.serviceOption'
+        ]);
 
+        $total_price = $cart->cartDetails->sum('total_price');
+
+        $last_reservation = Reservation::getLastReservation();
+
+        return view('cart.confirm',compact('cart','total_price','last_reservation'));
     }
 
 }
