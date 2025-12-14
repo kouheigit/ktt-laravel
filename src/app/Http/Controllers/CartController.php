@@ -16,5 +16,15 @@ use DB;
 
 class CartController extends Controller
 {
-    
+    public function index()
+    {
+        $user = Auth::user();
+
+        $cart = Cart::with([
+            'cartDetails.service',
+            'cartDetails.serviceOption'
+        ])->where('user_id',$user->id)->first();
+
+        
+    }
 }
