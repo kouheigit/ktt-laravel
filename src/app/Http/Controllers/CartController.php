@@ -49,4 +49,10 @@ class CartController extends Controller
             ->with('success','カートから削除しました');
     }
 
+    //確認画面
+    public function confirm(Cart $cart)
+    {
+
+    }
+
 }
