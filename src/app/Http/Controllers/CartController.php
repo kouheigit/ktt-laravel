@@ -32,15 +32,21 @@ class CartController extends Controller
         $total_price = $cart->cartDetails->sum('total_price');
 
         //最新予約
-        $last_reservation = REservation::getLastReservation();
+        $last_reservation = Reservation::getLastReservation();
 
         return view('cart.index',compact('cart','total_price','last_reservation'));
     }
     //カート明細削除
     public function delete(CartDetail $cart_detail)
     {
-        
-    }
+        if($cart_detail->cart->user_id != Auth::id()) {
+            abort(403);
+        }
 
+        $cart_detail->delete();
+
+        return redirect()->route('cart.index')
+            ->with('success','カートから削除しました');
+    }
 
 }
