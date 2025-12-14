@@ -25,6 +25,15 @@ class CartController extends Controller
             'cartDetails.serviceOption'
         ])->where('user_id',$user->id)->first();
 
-        
+        if(!$cart){
+            return view('cart.index',['cart'=>null,'total_price'=> 0]);
+        }
+
+        $total_price = $cart->cartDetails->sum('total_price');
+
+        //最新予約
+        $last_reservation = REservation::getLastReservation();
+
+        return view('cart.index',compact('cart','total_price','last_reservation'));
     }
 }
