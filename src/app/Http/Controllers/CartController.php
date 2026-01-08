@@ -74,5 +74,44 @@ class CartController extends Controller
             abort(403);
         }
         DB::beginTranscation();
+
+        try {
+            $user = Auth::user();
+
+            foreach ($cart->cartDetails as $detail) {
+                $order = Order::create([
+                    'user_id' => $user->id,
+                    'reservation_id' => $request->reservation_id,
+                    'service_id' => $detail->service_id,
+                    'price' => $detail->price,
+                    'quantity' => $detail->quantity,
+                    'total_price' => $detail->total_price,
+                    'payment' => $request->payment ?? 0,
+                    'type' => 1,
+                    'status' => 1,
+                ]);
+                OrderDetail::create([
+                    'order_id' => $order->id,
+                    'service_id' => $detail->service_id,
+                    'service_option_id' => $detail->service_option_id,
+                    'price' => $detail->price,
+                    'quantity' => $detail->quantity,
+                    'total_price' => $detail->total_price,
+                ]);
+
+            }
+            $cart->cartDetails()->delete();
+            $cart->delete();
+
+            DB::commit();
+
+            return redirect()->route('cart.complete')
+                ->with('success', '注文が完了しました');
+        }catch(\Exception $e) {
+            DB::rollBack();
+            \Log::error('Cart Order Error:' . $e->getMessage());
+            return back()->withErrors(['error'=>'注文に失敗しました']);
+        }
     }
+
 }
