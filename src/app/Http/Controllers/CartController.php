@@ -13,6 +13,7 @@ use App\Models\Reservation;
 use Auth;
 
 use DB;
+use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
@@ -67,4 +68,8 @@ class CartController extends Controller
         return view('cart.confirm',compact('cart','total_price','last_reservation'));
     }
 
+    public function store(Cart $cart, Request $request)
+    {
+        
+    }
 }
