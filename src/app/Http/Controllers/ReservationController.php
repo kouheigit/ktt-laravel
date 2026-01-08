@@ -2,36 +2,29 @@
 // app/Http/Controllers/ReservationController.php
 
 namespace App\Http\Controllers;
-
 use App\Models\Reservation;
-
 use App\Models\Calendar;
-
 use App\Models\Service;
-
 use App\Models\TmpOrderDetail;
-
 use App\Models\Order;
-
 use App\Models\OrderDetail;
-
 use App\Models\Freeday;
-
 use App\Models\ServiceOption;
-
 use App\Models\ReservationLog;
-
 use App\Consts\ReservationConst;
-
 use App\Services\FreedayService;
-
 use Illuminate\Http\Request;
-
 use Auth;
-
 use DB;
-
 use Carbon\Carbon;
+
+use tgMdk\TGMDK_Config;
+use tgMdk\TGMDK_Transaction;
+use tgMdk\dto\CardAuthorizeRequestDto;
+use tgMdk\dto\CardAuthorizeResponseDto;
+use App\Models\VeritransLog;
+use Illuminate\Validation\ValidationException;
+
 
 class ReservationController extends Controller
 {
@@ -368,4 +361,5 @@ class ReservationController extends Controller
         return redirect()->route('mypage.index')
             ->with('success', '予約をキャンセルしました');
     }
+
 }
