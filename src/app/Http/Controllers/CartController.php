@@ -117,6 +117,4 @@ class CartController extends Controller
     public function complete(){
         return view('cart.complete');
     }
-    
-
 }
