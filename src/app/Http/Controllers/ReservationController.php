@@ -333,7 +333,11 @@ class ReservationController extends Controller
      */
     private function processPayment($user,$reservation,$request,$total_price)
     {
-
+        // Veritrans設定読み込み
+        // 開発環境
+        TGMDK_Config::getInstance("/data/local_packages/veritrans-tgmdk/src/tgMdk/3GPSMDK.properties");
+        // 本番環境（コメントアウト）
+        // TGMDK_Config::getInstance("/home/xxx/vendor/veritrans/tgmdk/src/tgMdk/3GPSMDK.properties");
     }
 
         /**
