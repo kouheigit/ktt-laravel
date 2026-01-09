@@ -239,7 +239,7 @@ class ReservationController extends Controller
            'security_code'=>'required_if:payment,1|string',
            'token'=>'nullable|string',
         ]);
-        
+
         DB::beginTransaction();
 
         try {
