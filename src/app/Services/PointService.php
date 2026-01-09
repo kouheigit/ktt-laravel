@@ -27,6 +27,18 @@ class PointService
                 'from'=>$from,
                 'to'=>$to,
             ]);
+
+            UserPointLog::create([
+                'user_id'=>$userId,
+                'point'=>$point,
+                'reason'=>$reason,
+                'type'=>1,//1:加算
+            ]);
+            \Log::infor('Point Added',[
+               'user_id'=>$userId,
+                'point'=>$point,
+                'reason'=>$reason,
+            ]);
         });
 
     }
