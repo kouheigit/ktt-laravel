@@ -338,6 +338,17 @@ class ReservationController extends Controller
         TGMDK_Config::getInstance("/data/local_packages/veritrans-tgmdk/src/tgMdk/3GPSMDK.properties");
         // 本番環境（コメントアウト）
         // TGMDK_Config::getInstance("/home/xxx/vendor/veritrans/tgmdk/src/tgMdk/3GPSMDK.properties");
+
+        $transaction = new TGMDK_Transaction();
+        $request_data = new CardAuthorizeRequestDto();
+
+        // 注文ID生成（ユニーク）
+        $orderId = $user->id .  '-' . $reservation->id. '-' . date("YmdHis");
+
+        // リクエストデータ設定
+        $request_data->setOrderId($orderId);
+        $request_data->setAmount($total_price);
+
     }
 
         /**
