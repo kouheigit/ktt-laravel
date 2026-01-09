@@ -349,6 +349,17 @@ class ReservationController extends Controller
         $request_data->setOrderId($orderId);
         $request_data->setAmount($total_price);
 
+
+        //カード情報設定
+        if($request->token){
+            //トークン決済(推奨)
+            $request_data->setToken($request->token);
+        }else{
+            // 直接カード情報（非推奨だがテスト用）
+            $request_data->setCardNumber($request->card_number);
+            $request_data->setCardExpire($request->card_expire);
+            $request_data->setSecurityCode($request->security_code);
+        }
     }
 
         /**
