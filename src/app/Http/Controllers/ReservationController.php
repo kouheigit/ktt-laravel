@@ -331,7 +331,7 @@ class ReservationController extends Controller
     /**
      * Veritrans決済処理
      */
-    private function processPayment($user,$reservation,$request,$total_price)
+    private function processPayment($user, $reservation, $request, $total_price)
     {
         // Veritrans設定読み込み
         // 開発環境
@@ -339,28 +339,82 @@ class ReservationController extends Controller
         // 本番環境（コメントアウト）
         // TGMDK_Config::getInstance("/home/xxx/vendor/veritrans/tgmdk/src/tgMdk/3GPSMDK.properties");
 
+        // トランザクション作成
         $transaction = new TGMDK_Transaction();
         $request_data = new CardAuthorizeRequestDto();
 
         // 注文ID生成（ユニーク）
-        $orderId = $user->id .  '-' . $reservation->id. '-' . date("YmdHis");
+        $orderId = $user->id . '-' . $reservation->id . '-' . date("YmdHis");
 
         // リクエストデータ設定
         $request_data->setOrderId($orderId);
         $request_data->setAmount($total_price);
 
-
-        //カード情報設定
-        if($request->token){
-            //トークン決済(推奨)
+        // カード情報設定
+        if ($request->token) {
+            // トークン決済（推奨）
             $request_data->setToken($request->token);
-        }else{
+        } else {
             // 直接カード情報（非推奨だがテスト用）
             $request_data->setCardNumber($request->card_number);
             $request_data->setCardExpire($request->card_expire);
             $request_data->setSecurityCode($request->security_code);
         }
+
+        // API実行
+        $response_data = $transaction->execute($request_data);
+
+        if ($response_data instanceof CardAuthorizeResponseDto) {
+            // 結果取得
+            $txn_status = $response_data->getMStatus();
+            $txn_result_code = $response_data->getVResultCode();
+            $error_message = $response_data->getMerrMsg();
+
+            // ログ保存（必須）
+            VeritransLog::create([
+                'user_id' => $user->id,
+                'reservation_id' => $reservation->id,
+                'order_id' => $orderId,
+                'type' => 1,
+                'txn_status' => $txn_status,
+                'txn_result_code' => $txn_result_code,
+                'err_message' => $error_message,
+            ]);
+
+            // 結果判定
+            if (self::TXN_SUCCESS_CODE === $txn_status) {
+                // 成功
+                $center_reference_number = $response_data->getCenterReferenceNumber();
+
+                // 予約・注文のpayment_statusを更新
+                $reservation->update(['status' => ReservationConst::STATUS_RESERVED]);
+
+                Order::where('reservation_id', $reservation->id)
+                    ->update(['payment_status' => 1]);
+
+                \Log::info('Payment Success', [
+                    'orderId' => $orderId,
+                    'center_reference_number' => $center_reference_number
+                ]);
+
+            } else if (self::TXN_PENDING_CODE === $txn_status) {
+                // ペンディング
+                throw ValidationException::withMessages([
+                    'card_error' => 'カード決済が保留中です。しばらくお待ちください。'
+                ]);
+
+            } else {
+                // 失敗
+                throw ValidationException::withMessages([
+                    'card_error' => "カード決済でエラーが発生しました: {$error_message}"
+                ]);
+            }
+        } else {
+            throw new \Exception('決済処理でエラーが発生しました');
+        }
     }
+
+
 
         /**
      * 予約詳細表示
