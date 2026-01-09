@@ -232,6 +232,14 @@ class ReservationController extends Controller
 
     public function store(Request $request)
     {
+        $validated = $request->validate([
+           'payment'=>'request|integer|in:0,1',
+           'cart_number'=>'request_if:payment,1|string',
+           'cart_expire'=>'required_if:payment,1|string',
+           'security_code'=>'required_if:payment,1|string',
+           'token'=>'nullable|string',
+        ]);
+        
         DB::beginTransaction();
 
         try {
