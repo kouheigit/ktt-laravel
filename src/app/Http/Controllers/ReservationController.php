@@ -17,7 +17,6 @@ use Illuminate\Http\Request;
 use Auth;
 use DB;
 use Carbon\Carbon;
-
 use tgMdk\TGMDK_Config;
 use tgMdk\TGMDK_Transaction;
 use tgMdk\dto\CardAuthorizeRequestDto;
@@ -222,6 +221,15 @@ class ReservationController extends Controller
     /**
      * 予約登録（決済なし版）
      */
+
+    /**
+     * トランザクションステータスコード
+     */
+    public const TXN_FAILURE_CODE = 'failure';
+    public const TXN_PENDING_CODE = 'pending';
+    public const TXN_SUCCESS_CODE = 'success';
+
+
     public function store(Request $request)
     {
         DB::beginTransaction();
