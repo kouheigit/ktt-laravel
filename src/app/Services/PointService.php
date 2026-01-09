@@ -40,6 +40,35 @@ class PointService
                 'reason'=>$reason,
             ]);
         });
-
     }
+    /**
+     * ポイント利用
+     *
+     * @param int $userId ユーザーID
+     * @param int $point 使用ポイント数
+     * @param string $reason 理由
+     */
+    public function usePoing($userId,$point,$reason)
+    {
+        $availablePoints = $this->getAvailablePoints($userId);
+
+        if($availablePoints < $point) {
+            throw new \Exception("ポイントが不足していす（利用可能: {$availablePoints}P）");
+        }
+
+        DB::transcation(function () use ($userId,$point,$reason){
+            //古いポイントから消費(FIFO)
+            $remaining = $point;
+
+            $userPoints = UserPoint::where('user_id',$userId)
+                ->where('to','>=',now()->format('Y-m-d'))
+                ->where('point','>',0)
+                ->orderBy('from','asc')
+                ->lockForUpdate()
+                ->get();
+
+
+        });
+    }
+    
 }
