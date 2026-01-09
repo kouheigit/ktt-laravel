@@ -328,8 +328,15 @@ class ReservationController extends Controller
             return back()->withErrors(['error' => '予約に失敗しました: ' . $e->getMessage()]);
         }
     }
-
     /**
+     * Veritrans決済処理
+     */
+    private function processPayment($user,$reservation,$request,$total_price)
+    {
+
+    }
+
+        /**
      * 予約詳細表示
      */
     public function show(Reservation $reservation)
