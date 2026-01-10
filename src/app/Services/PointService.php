@@ -48,7 +48,7 @@ class PointService
      * @param int $point 使用ポイント数
      * @param string $reason 理由
      */
-    public function usePoing($userId,$point,$reason)
+    public function usePoint($userId,$point,$reason)
     {
         $availablePoints = $this->getAvailablePoints($userId);
 
@@ -67,8 +67,24 @@ class PointService
                 ->lockForUpdate()
                 ->get();
 
+            foreach($userPoints as $userPoint) {
+                if($remaining <= 0){
+                    break;
+                }
+                if($userPoint->point >= $remaining) {
+                    //このポイントで足りる
+                    $userPoint->point -= $remaining;
+                    $userPoint->save();
+                    $remaining = 0;
+                }else{
+                    //このポイントを全て使っても足りない
+                    $remaining -=$userPoint->point;
+                    $userPoint->point = 0;
+                    $userPoint->save();
+                }
+            }
 
         });
     }
-    
+
 }
