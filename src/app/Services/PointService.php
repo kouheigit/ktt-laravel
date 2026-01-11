@@ -87,8 +87,10 @@ class PointService
         });
     }
     public function getAvailablePoints($userId){
+
         $now = Carbon::now()->format('Y-m-d');
 
+        //合算したポイントを使っている
         return UserPoint::where('user_id',$userId)
             ->where('to','>=',$now)
             ->where('point','>',0)
@@ -97,9 +99,18 @@ class PointService
 
 
 
-  
-    public function getPointBalanceByExpiry($userId){
+    /**
+     * 有効期限別ポイント残高取得
+     */
+    public function getPointBalanceByExpiry($userId)
+    {
+        $now = Carbon::now()->format('Y-m-d');
 
+        return UserPoint::where('user_id',$userId)
+            ->where('to','>=',$now)
+            ->where('point','>',0)
+            ->orderBy('to','asc')
+            ->get();
     }
 
 
