@@ -23,8 +23,35 @@ class MypageController extends Controller
         $this->freeday_service = $freeday_service;
         $this->point_service = $point_service;
     }
-    
-    public function index(){
 
+    public function index(){
+        $user = Auth::user();
+
+        //ポイント残高取得
+        $user_point = $this->point_service->getAvailablePoints($user->id);
+        $pointbalance = $this->point_service->getPointBalanceByExpiry($user->id);
+
+        $freedays = collect();
+
+        if($user->type == UserConst::TYPE_OWNER){
+            $freedays = $this->freeday_service->getFreedays($user);
+        }
+
+        $reservations = Reservation::where('user_id',$user->id)
+            ->whereIn('status',[
+               ReservationConst::STATUS_APPLYING,
+               ReservationConst::STATUS_UNDER_RESERVATION,
+               ReservationContst::STATUS_RESERVED
+            ])
+        ->where('checkin_date','>=',Carbon::now()->format('Y-m-d'))
+            ->with('hotel')
+            ->orderBy('checkin_date','asc')
+            ->get();
+        return view('mypage.index',compact(
+            'user_point',
+            'pointbalance',
+            'freedays',
+            'reservations'
+        ));
     }
 }
