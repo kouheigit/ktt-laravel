@@ -133,7 +133,7 @@ class PointService
             $userPoint->point = 0;
             $userPoint->save();
         }
-
+        \Log::info('Points Expired', ['count' => $expiredPoints->count()]);
     }
 
 }
