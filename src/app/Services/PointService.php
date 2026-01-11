@@ -112,7 +112,27 @@ class PointService
             ->orderBy('to','asc')
             ->get();
     }
-    public function expirePoints(){
+    public function expirePoints()
+    {
+        $today = Carbon::now()->format('Y-m-d');
+
+        $expiredPoints = UserPoint::where('to','<',$today)
+            ->where('point','>',0)
+            ->get();
+
+        foreach($expiredPoints as $userPoint){
+           if($userPoint->point > 0){
+               UserPointLog::create([
+                  'user_id'=>$userPoint->user_id,
+                   'point'=>$userPoint->point,
+                   'reason'=>'ポイント有効期限切れ',
+                   'type'=>3,//3:失効
+               ]);
+           }
+            // ポイント削除
+            $userPoint->point = 0;
+            $userPoint->save();
+        }
 
     }
 
