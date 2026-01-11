@@ -95,6 +95,12 @@ class PointService
             ->sum('point');
     }
 
-   
+
+
+  
+    public function getPointBalanceByExpiry($userId){
+
+    }
+
 
 }
