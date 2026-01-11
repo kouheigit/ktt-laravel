@@ -86,5 +86,15 @@ class PointService
 
         });
     }
+    public function getAvailablePoints($userId){
+        $now = Carbon::now()->format('Y-m-d');
+
+        return UserPoint::where('user_id',$userId)
+            ->where('to','>=',$now)
+            ->where('point','>',0)
+            ->sum('point');
+    }
+
+   
 
 }
