@@ -43,8 +43,17 @@ return new class extends Migration
             $table->string('send_address2')->nullable();
             $table->string('send_tel',20)->nullable();
 
+            //システム情報
+            $table->integer('type')->default(1)->comment('1:一般,2:オーナー');
+            $table->integer('agree')->default(0)->comment('利用規約同意');
+            $table->integer('status')->default(1)->comment('1:有効,0:無効');
+            $table->integer('user_id')->nullable()->comment('親ユーザーID(オーナーの場合)');
 
-         
+            //論理削除
+            $table->softDeletes();
+
+
+
         });
     }
 
