@@ -63,7 +63,15 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->dropColumn([
+                'member_id','last_name','first_name','last_kana','first_kana',
+                'zip1','zip2','address1','address2','tel',
+                'company_name','company_kana','company_zip1','company_zip2',
+                'company_address1','company_address2','compay_tel','company_fax',
+                'send_name','send_kana','send_zip1','send_tel','type','agree',
+                'status','user_id','deleted_at',
+            ]);
         });
     }
 };
+
