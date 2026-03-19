@@ -34,6 +34,16 @@ return new class extends Migration
             $table->string('company_tex',20)->nullable();
             $table->string('company_fax',20)->nullable();
 
+            //送付先情報
+            $table->string('send_name')->nullable();
+            $table->string('send_kana')->nullable();
+            $table->string('send_zip1',3)->nullable();
+            $table->string('send_zip2',4)->nullable();
+            $table->string('send_address1')->nullable();
+            $table->string('send_address2')->nullable();
+            $table->string('send_tel',20)->nullable();
+
+
          
         });
     }
