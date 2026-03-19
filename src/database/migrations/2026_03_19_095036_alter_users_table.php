@@ -24,11 +24,17 @@ return new class extends Migration
             $table->string('address2')->nullable();
             $table->string('tel',20)->nullable();
 
-            /*
-             *
+            // 会社情報
+            $table->string('company_name')->nullable();
+            $table->string('company_kana')->nullable();
+            $table->string('company_zip1',3)->nullable();
+            $table->string('company_zip2',4)->nullable();
+            $table->string('company_address1')->nullable();
+            $table->string('company_address2')->nullable();
+            $table->string('company_tex',20)->nullable();
+            $table->string('company_fax',20)->nullable();
 
-
-             */
+         
         });
     }
 
