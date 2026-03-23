@@ -19,8 +19,8 @@ return new class extends Migration
             $table->date('end_date')->comment('有効期限');
             $table->integer('status')->default(1);
             $table->timestamps();
+
             $table->index(['user_id','end_date']);
-            $table->timestamps();
         });
     }
 
