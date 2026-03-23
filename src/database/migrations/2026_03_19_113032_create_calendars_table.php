@@ -24,7 +24,6 @@ return new class extends Migration
             $table->index(['hotel_id','date']);
             //履歴表示のindex
             $table->index(['user_id','start_date']);
-
             $table->timestamps();
         });
     }
