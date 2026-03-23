@@ -49,7 +49,7 @@ return new class extends Migration
             $table->index(['user_id','status']);
             $table->index(['checkin_date','status']);
             $table->index('owner_id');
-           
+
             $table->timestamps();
         });
     }
