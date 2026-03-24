@@ -62,5 +62,9 @@ class ReservationController extends Controller
 
         return view('reservation.index',compact('calendars','freedays','reservations'));
     }
-    
+
+
+
+
+
 }
