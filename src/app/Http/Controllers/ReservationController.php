@@ -62,10 +62,5 @@ class ReservationController extends Controller
 
         return view('reservation.index',compact('calendars','freedays','reservations'));
     }
-    //予約作成画面
-    public function create(Request $request)
-    {
-
-    }
-   
+    
 }
