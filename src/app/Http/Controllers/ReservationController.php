@@ -108,7 +108,7 @@ class ReservationController extends Controller
         $tmp_orders = TmpOrderDetail::where('user_id', $user->id)
             ->with(['service', 'serviceOption'])
             ->get();
-        
+
         return view('reservation.service', compact('services', 'tmp_orders', 'reservation_data'));
     }
 }
