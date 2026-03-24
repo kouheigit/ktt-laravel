@@ -111,4 +111,60 @@ class ReservationController extends Controller
 
         return view('reservation.service', compact('services', 'tmp_orders', 'reservation_data'));
     }
+    public function cart_add(Request $request)
+    {
+        $validated = $request->validate([
+           'service_id'=>'required|exists:services,id',
+           'service_option_id'=>'nullable|service_options,id',
+           'quantity'=>'required|integer|min:1',
+        ]);
+
+        $service = Service::findOrFail($request->service_id);
+
+        if($service->stock > 0 && $service->stock < $request->quantity)
+        {
+            return back()->withErrors(['quantity'=>'在庫が不足しています']);
+        }
+
+    }
+
+
+    /*カート追加
+    public function cart_add(Request $request)
+    {
+        $validated = $request->validate([
+            'service_id' => 'required|exists:services,id',
+            'service_option_id' => 'nullable|exists:service_options,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $service = Service::findOrFail($request->service_id);
+
+        // 在庫チェック
+        if ($service->stock > 0 && $service->stock < $request->quantity) {
+            return back()->withErrors(['quantity' => '在庫が不足しています']);
+        }
+
+        // 価格計算
+        $price = $service->price;
+        if ($request->service_option_id) {
+            $option = ServiceOption::findOrFail($request->service_option_id);
+            $price += $option->price;
+        }
+
+        // 一時保存
+        TmpOrderDetail::create([
+            'user_id' => Auth::id(),
+            'service_id' => $service->id,
+            'service_option_id' => $request->service_option_id,
+            'price' => $price,
+            'quantity' => $request->quantity,
+            'total_price' => $price * $request->quantity,
+            'type' => 1,
+        ]);
+
+        return redirect()->route('reservation.cart');
+    }
+
+*/
 }
