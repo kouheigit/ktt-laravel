@@ -159,6 +159,7 @@ class ReservationController extends Controller
 
         return view('reservation.cart', compact('tmp_orders', 'total_price', 'reservation_data'));
     }
+
     public function cart_delete(TmpOrderDetail $tmp_order_detail)
     {
         if($tmp_order_detail->user_id != Auth::id()){
@@ -194,5 +195,11 @@ class ReservationController extends Controller
             'total_price'
         ));
     }
+    public function store(Request $request)
+    {
 
+    }
 }
+
+
+
