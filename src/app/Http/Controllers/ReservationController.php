@@ -282,4 +282,16 @@ class ReservationController extends Controller
             return back()->withErrors(['error' => '予約に失敗しました: ' . $e->getMessage()]);
         }
     }
+    public function show(Reservation $reservation)
+    {
+        if ($reservation->user_id != Auth::id() && $reservation->owner_id != Auth::id()) {
+            abort(403);
+        }
+
+        $reservation->load(['hotel','orders.orderDetail.service','addOrders']);
+
+        return view('reservation.show',compact('reservation'));
+    }
 }
+
+
