@@ -197,9 +197,40 @@ class ReservationController extends Controller
     }
     public function store(Request $request)
     {
+        DB::beginTranscation();
+        try{
+            $user = Auth::user();
+            $reservation_data = session('reservation_data');
 
+            if(!$reservation_data){
+                throw new \Exception('予約情報がありません');
+            }
+           //予約作成
+            $reservation = Reservation::create([
+               'hotel_id'=>$reservation_data['hotel_id'],
+               'user_id'=>'user->id',
+               'owner_id'=>$user->type == 2 ? $user->id : $user->user_id,
+                'calendar_id'=>$reservation_data['calendar_id'] ?? null,
+                'checkin_date' => $reservation_data['checkin_date'],
+                'days'=>$reservation_data['days'],
+
+                'adult'=>$reservation_data['adult'],
+                'child'=> $reservation_data['child'] ?? 0,
+                'dog'=>$reservation_data['dog'] ?? 0,
+                'note'=>$request->note,
+                'payment'=>$request->payment ?? 0,
+                'status'=>ReservationConst::STATUS_UNDER_RESERVATION,
+            ]);
+
+
+
+
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Reservation Error: ' . $e->getMessage());
+            return back()->withErrors(['error' => '予約に失敗しました: ' . $e->getMessage()]);
+        }
     }
 }
-
-
 
