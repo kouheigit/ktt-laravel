@@ -222,8 +222,29 @@ class ReservationController extends Controller
                 'status'=>ReservationConst::STATUS_UNDER_RESERVATION,
             ]);
 
+            $tmp_orders = TmpOrderDetail::where('user_id',$user->id)->get();
 
+            foreach($tmp_orders as $tmp){
+                $order = Order::create([
+                    'user_id'=>$user->id,
+                    'reservation_id'=>$reservation->id,
+                    'service_id'=>$tmp->service_id,
+                    'price'=>$tmp->price,
+                    'quantity'=>$tmp->quantity,
+                    'total_price'=>$tmp->total_price,
+                    'payment'=>$request->payment ?? 0,
+                    'type' => 1,
+                    'status' => 1,
+                ]);
 
+                OrderDetail::create([
+                   'order_id'=>$order->id,
+                   'service_option_id'=>$tmp->service_option_id,
+                    'price'=>$tmp->price,
+                    'quantity'=>$tmp->quantity,
+                    'total_price' => $tmp->total_price,
+                ]);
+            }
 
 
         } catch (\Exception $e) {
@@ -233,4 +254,5 @@ class ReservationController extends Controller
         }
     }
 }
+
 
