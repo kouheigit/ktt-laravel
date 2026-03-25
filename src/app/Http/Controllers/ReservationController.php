@@ -292,6 +292,26 @@ class ReservationController extends Controller
 
         return view('reservation.show',compact('reservation'));
     }
-}
+    //予約キャンセル
+    public function cancel(Reservation $reservation)
+    {
+        if($reservation->user_id != Auth::id()){
+            abort(403);
+        }
+        DB::transaction(function () use ($reservation) {
+            // ステータス更新
+            $reservation->update(['status'=>ReservationConst::STATUS_CANSEL]);
+            // カレンダー解放
+            if($reservation->calendar_id){
+                Calendar::where('id',$reservation->calendar_id)
+                    ->update(['status'=>1]);
+            }
 
+            //ここから開始
+
+
+
+        }
+    }
+}
 
