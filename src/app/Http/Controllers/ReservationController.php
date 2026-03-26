@@ -300,19 +300,25 @@ class ReservationController extends Controller
         }
         DB::transaction(function () use ($reservation) {
             // ステータス更新
-            $reservation->update(['status'=>ReservationConst::STATUS_CANSEL]);
+            $reservation->update(['status' => ReservationConst::STATUS_CANSEL]);
             // カレンダー解放
-            if($reservation->calendar_id){
-                Calendar::where('id',$reservation->calendar_id)
-                    ->update(['status'=>1]);
+            if ($reservation->calendar_id) {
+                Calendar::where('id', $reservation->calendar_id)
+                    ->update(['status' => 1]);
             }
-
-            //ここから開始
-
-
+            // フリーデイの場合は泊数を戻す
+            // （ビジネスルールに応じて実装）
+            Reservation::create([
+                'reservation_id' => $reservation->id,
+                'user_id' => Auth::id(),
+                'action' => 'cancel',
+                'data' => json_encode(['canceled_at' => now()]),
+            ]);
+        });
+        return redirect()->route('mypage.index')
+            ->with('success','予約をキャンセルしました');
 
         }
-    }
 }
 
 
