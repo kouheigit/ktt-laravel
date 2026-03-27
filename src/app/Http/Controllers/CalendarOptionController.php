@@ -28,8 +28,23 @@ class CalendarOptionController extends Controller
             ->with(['hotel'])
             ->orderBy('start_date','asc')
             ->get();
-
+        //休日取得
+        $holidays = Holiday::whereYear('date',$year)
+            ->whereMonth('date',$month)
+            ->pluck('date')
+            ->map(function($date) {
+                return Carbon::parse($date)->format('Y-m-d');
+            })->toArray();
+        //予約済みの日程
+        $reservations = Reservation::where('user_id',$user->id)
+            ->where(function($query) use ($date){
+                $query->whereYear('checkin_date',$date->year)
+                    ->whereMonth('checkin_date',$date->month);
+            })
+            ->orWhere(function($query) use ($date){
+                $query->whereYear('checkin_date',$date->year)
+                    ->whereMonth('checkout_date',$date->month);
+            })->get();
     }
 }
-
 
