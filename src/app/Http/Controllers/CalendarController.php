@@ -48,8 +48,53 @@ class CalendarController extends Controller
                 abort(403);
             }
         }
-
         return view('services.show', compact('service', 'reservation'));
     }
+    /**カート追加*/
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'service_id'=>'required|exists:services,id',
+            'service_option_id'=>'nullable|exists:service_options,id',
+            'quantity'=>'required|integer|min:1',
+            'reservation_id'=>'nullable|exists]reservations,id',
+        ]);
 
+        $service = Service::findOrFail($request->service_id);
+        $user = Auth::user();
+
+        //最小注文数チェック
+        if($request->quantity < $service->minmum){
+            return back()->withErrors([
+                'quantity' => "最小注文数は{$service->minimum}{$service->unit}です"
+            ]);
+        }
+        //在庫チェック
+        if($service->stock > 0 && $service->stock < $request->quantity){
+            return back()->withErrors(['quantity'=>'在庫が不足しています']);
+        }
+        //在庫チェック
+        if($service->stock > 0 && $service->stock < $request->quantity){
+            return back()->withErrors(['quantity'=>'在庫が不足しています']);
+        }
+        // 価格計算
+        $price = $service->price;
+        if($request->service_option_id){
+            $option = SeviceOption::findOrFail($request->service_option_id);
+            $price += $option->price;
+        }
+        //カート取得または作成
+        $cart = Cart::firstOrCreate(['user_id'=>$user->id]);
+
+        CartDetail::create([
+            'cart_id'=>$cart->id,
+            'service_id'=>$service->id,
+            'service_option_id'=>$request->service_option_id,
+            'price'=>$price,
+            'quantity'=>$request->quantity,
+            'total_price'=>$price * $request->quantity,
+        ]);
+        return redirect()->route('cart.index')
+            ->with('success', 'カートに追加しました');
+    }
 }
