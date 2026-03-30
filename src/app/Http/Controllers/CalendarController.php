@@ -14,17 +14,42 @@ class CalendarController extends Controller
 {
     public function index()
     {
-        //現地注文可能なサービス
-        $service = Service::where('status',1)
-            ->where('tab',2) //現地注文タブ
-            ->orderBy('sort','asc')
-            ->with('sercviceOptions')
+        /**
+         * サービス一覧
+         */
+        // 現地注文可能なサービス
+        $services = Service::where('status', 1)
+            ->where('tab', 2) // 現地注文タブ
+            ->orderBy('sort', 'asc')
+            ->with('serviceOptions')
             ->get();
 
-        //最新の予約取得
-        $last_reservation = Resevation::getLastReservation();
+        // 最新の予約取得
+        $last_reservation = Reservation::getLastReservation();
 
-        return view('services.index',compact('services','last_reservation'));
+        return view('services.index', compact('services', 'last_reservation'));
     }
-  
+
+    /**
+     * サービス詳細・注文画面
+     */
+    public function show(Service $service, Request $request)
+    {
+        $service->load('serviceOptions');
+
+        // 予約情報（任意）
+        $reservation_id = $request->input('reservation_id');
+        $reservation = null;
+
+        if ($reservation_id) {
+            $reservation = Reservation::findOrFail($reservation_id);
+
+            if ($reservation->user_id != Auth::id()) {
+                abort(403);
+            }
+        }
+
+        return view('services.show', compact('service', 'reservation'));
+    }
+
 }
