@@ -76,13 +76,20 @@ class CartController extends Controller
                 ]);
             }
 
+            //カート削除
+            $cart->cartDetails()->delete();
+            $cart->delete();
+
+            DB::commit();
+
+            return redirect()->route('cart.complete')
+                ->with('success','注文が完了しました');
+
         }catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Cart Order Error: ' . $e->getMessage());
             return back()->withErrors(['error' => '注文に失敗しました']);
         }
     }
- 
-
 }
 
