@@ -42,9 +42,10 @@ class CartController extends Controller
         ]);
         $total_price = $cart->cartDetails->sum('total_price');
         $last_reservation = Reservation::getLastReservation();
-        
+
         return view('cart.confirm',compact('cart','total_price','last_reservation'));
     }
+    
 
 }
 
