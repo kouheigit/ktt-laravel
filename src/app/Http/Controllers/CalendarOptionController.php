@@ -80,7 +80,6 @@ class CalendarOptionController extends Controller
             ->where('checkin_date','<=',$date->format('Y-m-d'))
             ->where('checkout_date','>=',$date->format('Y-m-d'))
             ->first();
-
         return view('calendar.detail',compact('calendar','reservation','date'));
 
     }

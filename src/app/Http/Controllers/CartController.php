@@ -91,5 +91,12 @@ class CartController extends Controller
             return back()->withErrors(['error' => '注文に失敗しました']);
         }
     }
+    /**
+     * 完了画面
+     */
+    public function complete()
+    {
+        return view('cart.complete');
+    }
 }
 
