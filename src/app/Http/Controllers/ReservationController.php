@@ -6,7 +6,11 @@ use App\Models\Reservation;
 
 use App\Models\Calendar;
 
+use App\Models\Freeday;
+
 use App\Models\Service;
+
+use App\Models\ServiceOption;
 
 use App\Models\TmpOrderDetail;
 
@@ -20,9 +24,11 @@ use App\Services\FreedayService;
 
 use Illuminate\Http\Request;
 
-use Auth;
+use Illuminate\Support\Facades\Auth;
 
-use DB;
+use Illuminate\Support\Facades\DB;
+
+use Illuminate\Support\Facades\Log;
 
 use Carbon\Carbon;
 
@@ -31,9 +37,9 @@ class ReservationController extends Controller
 {
     private $freeday_service;
 
-    public function __construct(FreedayService $freeday_sevice)
+    public function __construct(FreedayService $freeday_service)
     {
-        $this->freeday_service = $freeday_sevice;
+        $this->freeday_service = $freeday_service;
     }
     public function index(Request $request)
     {
@@ -115,33 +121,33 @@ class ReservationController extends Controller
     {
         $validated = $request->validate([
            'service_id'=>'required|exists:services,id',
-           'service_option_id'=>'nullable|service_options,id',
+           'service_option_id'=>'nullable|exists:service_options,id',
            'quantity'=>'required|integer|min:1',
         ]);
 
-        $service = Service::findOrFail($request->service_id);
+        $service = Service::findOrFail($validated['service_id']);
 
 
         // 在庫チェック
-        if($service->stock > 0 && $service->stock < $request->quantity)
+        if($service->stock > 0 && $service->stock < $validated['quantity'])
         {
             return back()->withErrors(['quantity'=>'在庫が不足しています']);
         }
 
         // 価格計算
         $price = $service->price;
-        if($request->service_option_id){
-            $option = ServiceOption::findOrFail($request->service_option_id);
+        if(!empty($validated['service_option_id'])){
+            $option = ServiceOption::findOrFail($validated['service_option_id']);
             $price += $option->price;
         }
         //　一時保存
         TmpOrderDetail::create([
            'user_id'=>Auth::id(),
            'service_id'=>$service->id,
-            'service_option_id'=>$request->service_option_id,
+            'service_option_id'=>$validated['service_option_id'] ?? null,
             'price'=>$price,
-            'quantity'=>$request->qiantity,
-            'total_price'=>$price * $request->quantity,
+            'quantity'=>$validated['quantity'],
+            'total_price'=>$price * $validated['quantity'],
             'type'=>1,
         ]);
         return redirect()->route('reservation.cart');
@@ -197,7 +203,7 @@ class ReservationController extends Controller
     }
     public function store(Request $request)
     {
-        DB::beginTranscation();
+        DB::beginTransaction();
         try{
             $user = Auth::user();
             $reservation_data = session('reservation_data');
@@ -208,8 +214,8 @@ class ReservationController extends Controller
            //予約作成
             $reservation = Reservation::create([
                'hotel_id'=>$reservation_data['hotel_id'],
-               'user_id'=>'user->id',
-               'owner_id'=>$user->type == 2 ? $user->id : $user->user_id,
+               'user_id'=>$user->id,
+               'owner_id'=>($user->type ?? null) == 2 ? $user->id : ($user->user_id ?? null),
                 'calendar_id'=>$reservation_data['calendar_id'] ?? null,
                 'checkin_date' => $reservation_data['checkin_date'],
                 'days'=>$reservation_data['days'],
@@ -263,12 +269,14 @@ class ReservationController extends Controller
             session()->forget('reservation_data');
 
             // 予約ログ保存
-            ReservationLog::create([
-                'reservation_id' => $reservation->id,
-                'user_id' => $user->id,
-                'action' => 'create',
-                'data' => json_encode($reservation_data),
-            ]);
+            if (class_exists(\App\Models\ReservationLog::class)) {
+                \App\Models\ReservationLog::create([
+                    'reservation_id' => $reservation->id,
+                    'user_id' => $user->id,
+                    'action' => 'create',
+                    'data' => json_encode($reservation_data),
+                ]);
+            }
 
             DB::commit();
 
@@ -278,7 +286,7 @@ class ReservationController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Reservation Error: ' . $e->getMessage());
+            Log::error('Reservation Error: ' . $e->getMessage());
             return back()->withErrors(['error' => '予約に失敗しました: ' . $e->getMessage()]);
         }
     }
@@ -308,12 +316,14 @@ class ReservationController extends Controller
             }
             // フリーデイの場合は泊数を戻す
             // （ビジネスルールに応じて実装）
-            Reservation::create([
-                'reservation_id' => $reservation->id,
-                'user_id' => Auth::id(),
-                'action' => 'cancel',
-                'data' => json_encode(['canceled_at' => now()]),
-            ]);
+            if (class_exists(\App\Models\ReservationLog::class)) {
+                \App\Models\ReservationLog::create([
+                    'reservation_id' => $reservation->id,
+                    'user_id' => Auth::id(),
+                    'action' => 'cancel',
+                    'data' => json_encode(['canceled_at' => now()]),
+                ]);
+            }
         });
         return redirect()->route('mypage.index')
             ->with('success','予約をキャンセルしました');
