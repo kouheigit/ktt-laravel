@@ -203,6 +203,15 @@ class ReservationController extends Controller
     }
     public function store(Request $request)
     {
+        $validated = $request->validate([
+            'payment' => 'required|integer|in:0,1',
+            'card_number' => 'required_if:payment,1|string',
+            'card_expire' => 'required_if:payment,1|string',
+            'card_cvv' => 'required_if:payment,1|string',
+            'token' => 'nullable|string',
+            'note' => 'nullable|string',
+        ]);
+
         DB::beginTransaction();
         try{
             $user = Auth::user();
@@ -210,6 +219,10 @@ class ReservationController extends Controller
 
             if(!$reservation_data){
                 throw new \Exception('予約情報がありません');
+            }
+
+            if ((int) $validated['payment'] === 1 && empty($validated['token'])) {
+                throw new \Exception('決済情報が不正です');
             }
            //予約作成
             $reservation = Reservation::create([
@@ -223,8 +236,8 @@ class ReservationController extends Controller
                 'adult'=>$reservation_data['adult'],
                 'child'=> $reservation_data['child'] ?? 0,
                 'dog'=>$reservation_data['dog'] ?? 0,
-                'note'=>$request->note,
-                'payment'=>$request->payment ?? 0,
+                'note'=>$validated['note'] ?? null,
+                'payment'=>$validated['payment'],
                 'status'=>ReservationConst::STATUS_UNDER_RESERVATION,
             ]);
 
