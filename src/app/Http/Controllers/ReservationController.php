@@ -21,6 +21,7 @@ use App\Models\OrderDetail;
 use App\Consts\ReservationConst;
 
 use App\Services\FreedayService;
+use App\Services\PaymentApiService;
 
 use Illuminate\Http\Request;
 
@@ -36,10 +37,12 @@ use Carbon\Carbon;
 class ReservationController extends Controller
 {
     private $freeday_service;
+    private $payment_api_service;
 
-    public function __construct(FreedayService $freeday_service)
+    public function __construct(FreedayService $freeday_service, PaymentApiService $payment_api_service)
     {
         $this->freeday_service = $freeday_service;
+        $this->payment_api_service = $payment_api_service;
     }
     public function index(Request $request)
     {
@@ -251,7 +254,7 @@ class ReservationController extends Controller
                     'price'=>$tmp->price,
                     'quantity'=>$tmp->quantity,
                     'total_price'=>$tmp->total_price,
-                    'payment'=>$request->payment ?? 0,
+                    'payment'=>$validated['payment'],
                     'type' => 1,
                     'status' => 1,
                 ]);
@@ -263,6 +266,28 @@ class ReservationController extends Controller
                     'quantity'=>$tmp->quantity,
                     'total_price' => $tmp->total_price,
                 ]);
+            }
+
+            // 決済（payment=1 の場合）
+            if ((int) $validated['payment'] === 1) {
+                $amount = (int) $tmp_orders->sum('total_price');
+                $result = $this->payment_api_service->charge([
+                    'user_id' => $user->id,
+                    'reservation_id' => $reservation->id,
+                    'order_id' => $order->id ?? null,
+                    'amount' => $amount,
+                    'token' => $validated['token'],
+                ]);
+
+                // 予約ログ保存（決済結果も残す）
+                if (class_exists(\App\Models\ReservationLog::class)) {
+                    \App\Models\ReservationLog::create([
+                        'reservation_id' => $reservation->id,
+                        'user_id' => $user->id,
+                        'action' => 'payment',
+                        'data' => json_encode($result),
+                    ]);
+                }
             }
 
             //カレンダーステータス更新
