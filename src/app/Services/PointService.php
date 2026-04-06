@@ -20,16 +20,27 @@ class PointService
     public function addPoint($userId, $point, $reason, $from, $to)
     {
         DB::transcation(function ()use ($userId,$point,$reason,$from,$to){
-            //ポイント残高追加
+            // ポイント残高追加
             $userPoint = UserPoint::create([
-               'user_id'=>$userId,
-               'point'=>$point,
-                'from'=>$from,
-
+                'user_id' => $userId,
+                'point' => $point,
+                'from' => $from,
+                'to' => $to,
             ]);
-          
+
+            // ログ記録
+            UserPointLog::create([
+                'user_id' => $userId,
+                'point' => $point,
+                'reason' => $reason,
+                'type' => 1, // 1:加算
+            ]);
+
+            \Log::info('Point Added', [
+                'user_id' => $userId,
+                'point' => $point,
+                'reason' => $reason
+            ]);
         });
-
+        
     }
-
-}
