@@ -19,7 +19,7 @@ class PointService
      */
     public function addPoint($userId, $point, $reason, $from, $to)
     {
-        DB::transcation(function ()use ($userId,$point,$reason,$from,$to){
+        DB::transcation(function () use ($userId, $point, $reason, $from, $to) {
             // ポイント残高追加
             $userPoint = UserPoint::create([
                 'user_id' => $userId,
@@ -42,5 +42,77 @@ class PointService
                 'reason' => $reason
             ]);
         });
-        
     }
+
+    /*
+     * /**
+ * ポイント利用
+ *
+ * @param int $userId ユーザーID
+ * @param int $point 使用ポイント数
+ * @param string $reason 理由
+ */
+    public function usePoint($userId, $point, $reason)
+    {
+        // 利用可能ポイントチェック
+        $availablePoints = $this->getAvailablePoints($userId);
+
+        if ($availablePoints < $point) {
+            throw new \Exception("ポイントが不足しています（利用可能: {$availablePoints}P）");
+        }
+
+        DB::transaction(function () use ($userId, $point, $reason) {
+            // 古いポイントから消費（FIFO）
+            $remaining = $point;
+
+            $userPoints = UserPoint::where('user_id', $userId)
+                ->where('to', '>=', now()->format('Y-m-d'))
+                ->where('point', '>', 0)
+                ->orderBy('from', 'asc') // 古い順
+                ->lockForUpdate() // 排他ロック
+                ->get();
+
+            foreach ($userPoints as $userPoint) {
+                if ($remaining <= 0) {
+                    break;
+                }
+
+                if ($userPoint->point >= $remaining) {
+                    // このポイントで足りる
+                    $userPoint->point -= $remaining;
+                    $userPoint->save();
+                    $remaining = 0;
+                } else {
+                    // このポイントを全て使っても足りない
+                    $remaining -= $userPoint->point;
+                    $userPoint->point = 0;
+                    $userPoint->save();
+                }
+            }
+
+            // ログ記録
+            UserPointLog::create([
+                'user_id' => $userId,
+                'point' => $point,
+                'reason' => $reason,
+                'type' => 2, // 2:減算
+            ]);
+
+            \Log::info('Point Used', [
+                'user_id' => $userId,
+                'point' => $point,
+                'reason' => $reason
+            ]);
+        });
+    }
+    //利用可能ポイント取得
+    public function getAvailablePoints($userId)
+    {
+        $now = Carbon::now()->format('Y-m-d');
+
+        return UserPoint::where('user_id',$userId)
+            ->where('to','>=',$now)
+            ->where('point','>',0)
+            ->sum('point');
+    }
+}
