@@ -18,11 +18,13 @@ class MypageController extends Controller
     private FreedayService $freeday_service;
     private PointService $point_service;
 
-    public function __construct(
-        FreedayService $freeday_service,
-        PointService $point_service
-    ){
+    public function __construct(FreedayService $freeday_service, PointService $point_service)
+    {
         $this->freeday_service = $freeday_service;
         $this->point_service = $point_service;
     }
+    public function index(){
+        
+    }
+
 }
