@@ -23,7 +23,9 @@ class MypageController extends Controller
         $this->freeday_service = $freeday_service;
         $this->point_service = $point_service;
     }
-    public function index(){
+
+    public function index()
+    {
         $user = Auth::user();
 
         //利用可能ポイント合計
@@ -33,27 +35,28 @@ class MypageController extends Controller
 
         // FREEDAY取得（オーナーのみ）
         $freedays = collect();
-        if((int)$user->type === UserConst::TYPE_OWNER){
+        if ((int)$user->type === UserConst::TYPE_OWNER) {
             $freedays = $this->freeday_service->getFreedays($user);
         }
         //今後の予約取得
-        $reservations = Reservation::where('user_id',$user->id)
-            ->whereIn('statis',[
+        $reservations = Reservation::where('user_id', $user->id)
+            ->whereIn('statis', [
                 ReservationConst::STATUS_APPLYING,
                 ReservationConst::STATUS_UNDER_RESERVATION,
                 ReservationConst::STATUS_RESERVED,
             ])
-            ->where('checkin_date','>=',Carbon::now()->format('Y-m-d'))
+            ->where('checkin_date', '>=', Carbon::now()->format('Y-m-d'))
             ->with('hotel')
-            ->orderBy('checkin_date','asc')
+            ->orderBy('checkin_date', 'asc')
             ->get();
-        return view('mypage.index',compact(
+        return view('mypage.index', compact(
             'user_point',
             'pointbalance',
             'freedays',
             'reservations',
-            ));
+        ));
     }
+
     /*
      *   /**
      * プロフィール編集画面
@@ -62,5 +65,9 @@ class MypageController extends Controller
     {
         $user = Auth::user();
         return view('mypage.edit', compact('user'));
+    }
+
+    public function update(Request $request)
+    {
     }
 }
