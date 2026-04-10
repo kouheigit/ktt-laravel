@@ -53,6 +53,14 @@ class MypageController extends Controller
             'freedays',
             'reservations',
             ));
-
+    }
+    /*
+     *   /**
+     * プロフィール編集画面
+     */
+    public function edit()
+    {
+        $user = Auth::user();
+        return view('mypage.edit', compact('user'));
     }
 }
