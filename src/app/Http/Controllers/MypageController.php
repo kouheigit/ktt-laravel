@@ -69,5 +69,21 @@ class MypageController extends Controller
 
     public function update(Request $request)
     {
+        $user = Auth::user();
+        $validated = $request->validate([
+            'name'=>'requeired|string|max:255',
+            'email'=>'requeired|email|unique:users,email,.$user->id',
+            'first_name'  => 'nullable|string|max:255',
+            'last_kana'   => 'nullable|string|max:255',
+            'first_kana'  => 'nullable|string|max:255',
+            'zip1'        => 'nullable|string|max:3',
+            'zip2'=>'nullable|string|max:4',
+            'address1'=>'nullable|string|max:255',
+            'address2'=>'nullable|string|max:20',
+            'tel'=>'nullable|string|max:20',
+            'password'=>'nullable|string|min:8|confirmed',
+
+        ]);
+
     }
 }
