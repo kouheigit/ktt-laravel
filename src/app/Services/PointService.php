@@ -1,10 +1,12 @@
 <?php
+
 namespace App\Services;
+
 use App\Models\UserPoint;
 use App\Models\UserPointLog;
-use App\Models\User;
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PointService
 {
@@ -19,7 +21,7 @@ class PointService
      */
     public function addPoint($userId, $point, $reason, $from, $to)
     {
-        DB::transcation(function () use ($userId, $point, $reason, $from, $to) {
+        DB::transaction(function () use ($userId, $point, $reason, $from, $to) {
             // ポイント残高追加
             $userPoint = UserPoint::create([
                 'user_id' => $userId,
@@ -36,16 +38,15 @@ class PointService
                 'type' => 1, // 1:加算
             ]);
 
-            \Log::info('Point Added', [
+            Log::info('Point Added', [
                 'user_id' => $userId,
                 'point' => $point,
-                'reason' => $reason
+                'reason' => $reason,
             ]);
         });
     }
 
-    /*
-     * /**
+    /**
  * ポイント利用
  *
  * @param int $userId ユーザーID
@@ -98,10 +99,10 @@ class PointService
                 'type' => 2, // 2:減算
             ]);
 
-            \Log::info('Point Used', [
+            Log::info('Point Used', [
                 'user_id' => $userId,
                 'point' => $point,
-                'reason' => $reason
+                'reason' => $reason,
             ]);
         });
     }
@@ -135,7 +136,7 @@ class PointService
                 $userPoint->save();
             }
         }
-        \Log::info('Points Expired', ['count' => $expiredPoints->count()]);
+        Log::info('Points Expired', ['count' => $expiredPoints->count()]);
     }
 }
 
