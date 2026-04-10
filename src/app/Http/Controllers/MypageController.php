@@ -82,8 +82,17 @@ class MypageController extends Controller
             'address2'=>'nullable|string|max:20',
             'tel'=>'nullable|string|max:20',
             'password'=>'nullable|string|min:8|confirmed',
-
         ]);
+        //パスワードが入力されている場合のみ更新
+        if($request->filled('password')){
+            $validated['password'] =  bcrypt($request->password);
+        }else{
+            unset($validated['password']);
+        }
+        $user->update($validated);
 
+        return redirect()
+            ->route('mypage.index')
+            ->with('success','プロフィールを更新しました');
     }
 }
