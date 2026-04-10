@@ -22,6 +22,7 @@ use App\Consts\ReservationConst;
 
 use App\Services\FreedayService;
 use App\Services\PaymentApiService;
+use App\Services\PointService;
 
 use Illuminate\Http\Request;
 
@@ -38,11 +39,13 @@ class ReservationController extends Controller
 {
     private $freeday_service;
     private $payment_api_service;
+    private $point_service;
 
-    public function __construct(FreedayService $freeday_service, PaymentApiService $payment_api_service)
+    public function __construct(FreedayService $freeday_service, PaymentApiService $payment_api_service, PointService $point_service)
     {
         $this->freeday_service = $freeday_service;
         $this->payment_api_service = $payment_api_service;
+        $this->point_service = $point_service;
     }
     public function index(Request $request)
     {
@@ -197,10 +200,20 @@ class ReservationController extends Controller
         $service_total = $tmp_orders->sum('total_price');
         $total_price = $service_total;
 
+        // ================================
+        // 以下追加する箇所（ポイント残高/上限計算など）
+        // ================================
+        $available_points = $this->point_service->getAvailablePoints($user->id);
+        $max_point_use = min((int) $available_points, (int) $total_price);
+        $max_point_num = $max_point_use;
+
         return view('reservation.confirm', compact(
             'reservation_data',
             'tmp_orders',
             'service_total',
+            'available_points',
+            'max_point_use',
+            'max_point_num',
             'total_price'
         ));
     }
@@ -212,6 +225,7 @@ class ReservationController extends Controller
             'card_expire' => 'required_if:payment,1|string',
             'card_cvv' => 'required_if:payment,1|string',
             'token' => 'nullable|string',
+            'use_point' => 'nullable|integer|min:0',
             'note' => 'nullable|string',
         ]);
 
@@ -268,9 +282,30 @@ class ReservationController extends Controller
                 ]);
             }
 
+            // ポイント適用（予約確定時に減算）
+            $service_total = (int) $tmp_orders->sum('total_price');
+            $use_point = (int) ($validated['use_point'] ?? 0);
+            if ($use_point > 0) {
+                $available_points = (int) $this->point_service->getAvailablePoints($user->id);
+                $max_point_use = min($available_points, $service_total);
+                if ($use_point > $max_point_use) {
+                    throw new \Exception("ポイントが不足しています（利用可能: {$available_points}P）");
+                }
+                $this->point_service->usePoint($user->id, $use_point, '予約に利用');
+
+                if (class_exists(\App\Models\ReservationLog::class)) {
+                    \App\Models\ReservationLog::create([
+                        'reservation_id' => $reservation->id,
+                        'user_id' => $user->id,
+                        'action' => 'point_use',
+                        'data' => json_encode(['use_point' => $use_point, 'available_points' => $available_points]),
+                    ]);
+                }
+            }
+
             // 決済（payment=1 の場合）
             if ((int) $validated['payment'] === 1) {
-                $amount = (int) $tmp_orders->sum('total_price');
+                $amount = max(0, (int) $tmp_orders->sum('total_price') - (int) ($use_point ?? 0));
                 $result = $this->payment_api_service->charge([
                     'user_id' => $user->id,
                     'reservation_id' => $reservation->id,
